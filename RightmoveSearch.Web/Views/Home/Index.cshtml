@@ -1,0 +1,56 @@
+﻿@model RightmoveSearch.Web.Models.HomeViewModel
+
+@{
+    ViewBag.Title = "Home Page";
+}
+
+<p>Search for properties in need of modernisation:</p>
+@using (Html.BeginForm())
+{
+    <ul id="search-form">
+        <li>
+            @Html.LabelFor(x => x.MinPrice)
+            @Html.TextBoxFor(x => x.MinPrice)
+            @Html.ValidationMessageFor(x => x.MinPrice)
+        </li>
+        <li>
+            @Html.LabelFor(x => x.MaxPrice)
+            @Html.TextBoxFor(x => x.MaxPrice)
+            @Html.ValidationMessageFor(x => x.MaxPrice)
+        </li>
+        <li>
+            @Html.LabelFor(x => x.MaxDaysSinceAdded)
+            @Html.TextBoxFor(x => x.MaxDaysSinceAdded)
+            @Html.ValidationMessageFor(x => x.MaxDaysSinceAdded)
+        </li>
+        <li>
+            @Html.LabelFor(x => x.Radius)
+            @Html.TextBoxFor(x => x.Radius)
+            @Html.ValidationMessageFor(x => x.Radius)
+        </li>
+        <li>
+            <input type="submit" value="Search" />
+        </li>
+    </ul>
+}
+
+@if(Model.Results != null) {
+    <p>Your search matched <strong>@Model.Results.Count()</strong> properties: </p>
+<table cellpadding="3" border="1">
+    <thead>
+        <tr>
+            <th>Date Added</th>
+            <th>Address</th>
+        </tr>
+    </thead>
+    @foreach (var result in Model.Results)
+    {
+        <tr>
+            <td>@result.DateAdded.ToString("dd/MM/yyyy")</td>
+            <td>
+                <a href="@string.Format("http://www.rightmove.co.uk{0}", @result.Link)" target="_blank">@result.Address</a>
+            </td>
+        </tr>
+    }
+</table>
+}
