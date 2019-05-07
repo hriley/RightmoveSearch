@@ -4,7 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using HtmlAgilityPack;
-using System.Net;
+using System.Diagnostics;
 using RightmoveSearch.Domain;
 using RightmoveSearch.Web.Models;
 using System.Web.Caching;
@@ -18,10 +18,10 @@ namespace RightmoveSearch.Web.Controllers
             var vm = new HomeViewModel
             {
                 MinPrice = 100000,
-                MaxPrice = 280000,
+                MaxPrice = 300000,
                 MaxDaysSinceAdded = 1,
                 Radius = 20,
-                Results = null
+                Result = null
             };
 
             return View(vm);
@@ -30,22 +30,23 @@ namespace RightmoveSearch.Web.Controllers
         [HttpPost]
         public ActionResult Index(HomeViewModel model)
         {
-            
+            Stopwatch sw = Stopwatch.StartNew();
             if (ModelState.IsValid)
             {
                 var cacheKey = string.Format("{0}-{1}-{2}-{3}", model.MinPrice, model.MaxPrice, model.MaxDaysSinceAdded, model.Radius);
                 if (HttpRuntime.Cache.Get(cacheKey) == null)
                 {
                     var service = new RightmoveService();
-                    model.Results = service.GetProperties(model.MinPrice, model.MaxPrice, model.MaxDaysSinceAdded, model.Radius);
-                    HttpRuntime.Cache.Insert(cacheKey, model.Results, null, DateTime.Now.AddHours(12), Cache.NoSlidingExpiration);
+                    model.Result = service.GetProperties(model.MinPrice, model.MaxPrice, model.MaxDaysSinceAdded, model.Radius);
+                    HttpRuntime.Cache.Insert(cacheKey, model.Result, null, DateTime.Now.AddHours(12), Cache.NoSlidingExpiration);
+                    
                 }
                 else
                 {
-                    model.Results = (IEnumerable<SearchResultModel>)HttpRuntime.Cache.Get(cacheKey);
+                    model.Result = (SearchResultModel)HttpRuntime.Cache.Get(cacheKey);
                 }
             }
-
+            model.Duration = sw.Elapsed.Seconds;
             return View(model);
         }
     }

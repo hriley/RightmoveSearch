@@ -20,13 +20,14 @@ namespace RightmoveSearch.Domain
             cookies = new CookieContainer();
         }
 
-        public HtmlDocument GetPage(string url)
+        public HtmlDocument GetPage(string url, string userAgent)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             request.Method = "GET";
 
-            //Set more parameters here...
-            //...
+            if(!string.IsNullOrEmpty(userAgent))
+                request.UserAgent = userAgent;
+                        
 
             //This is the important part.
             request.CookieContainer = cookies;

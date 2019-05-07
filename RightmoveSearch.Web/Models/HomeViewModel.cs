@@ -23,6 +23,8 @@ namespace RightmoveSearch.Web.Models
         public int Radius { get; set; }
 
         [DefaultValue(null)]
-        public IEnumerable<SearchResultModel> Results { get; set; }
+        public SearchResultModel Result { get; set; }
+
+        public int Duration { get; set; }
     }
 }

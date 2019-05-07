@@ -248,7 +248,7 @@
     <None Include="Project_Readme.html" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ClassLibrary1\RightmoveSearch.Domain.csproj">
+    <ProjectReference Include="..\RightmoveSearch.Domain\RightmoveSearch.Domain.csproj">
       <Project>{cdd994e3-4786-4f51-8617-3d6fb8552fe9}</Project>
       <Name>RightmoveSearch.Domain</Name>
     </ProjectReference>
