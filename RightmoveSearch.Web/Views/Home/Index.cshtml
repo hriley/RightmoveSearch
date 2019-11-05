@@ -1,32 +1,43 @@
 ﻿@model RightmoveSearch.Web.Models.HomeViewModel
 
 @{
-    ViewBag.Title = "Home Page";
+    ViewBag.Title = "Home";
 }
 
 <p>Search for properties in need of modernisation:</p>
 @using (Html.BeginForm())
 {
     <ul id="search-form">
+        <li>@Html.ValidationSummary(true, "", new {  })</li>
         <li>
-            @Html.LabelFor(x => x.MinPrice)
+            @Html.LabelFor(x => x.Regions, "Region")
+            @Html.DropDownListFor(model => model.selectedRegion, new SelectList(Model.Regions, "Value", "key"))
+            @Html.ValidationMessageFor(x => x.selectedRegion)
+        </li>
+        <li>
+            @Html.LabelFor(x => x.MinPrice, "Min price")
             @Html.TextBoxFor(x => x.MinPrice)
             @Html.ValidationMessageFor(x => x.MinPrice)
         </li>
         <li>
-            @Html.LabelFor(x => x.MaxPrice)
+            @Html.LabelFor(x => x.MaxPrice, "Max Price")
             @Html.TextBoxFor(x => x.MaxPrice)
             @Html.ValidationMessageFor(x => x.MaxPrice)
         </li>
         <li>
-            @Html.LabelFor(x => x.MaxDaysSinceAdded)
-            @Html.DropDownListFor(model => model.MaxDaysSinceAdded, new SelectList(new string[] {"1", "3", "7", "14"}, Model.MaxDaysSinceAdded))
+            @Html.LabelFor(x => x.MaxDaysSinceAdded, "Days since added")
+            @Html.DropDownListFor(model => model.selectedMaxDays, new SelectList(Model.MaxDaysSinceAdded, "Value", "Key"))
             @Html.ValidationMessageFor(x => x.MaxDaysSinceAdded)
         </li>
         <li>
             @Html.LabelFor(x => x.Radius)
-            @Html.TextBoxFor(x => x.Radius)
+            @Html.DropDownListFor(model => model.selectedRadius, new SelectList(Model.Radius, "Value", "Key"))
             @Html.ValidationMessageFor(x => x.Radius)
+        </li>
+        <li>
+            @Html.LabelFor(x => x.SearchTypes, "Search Type")
+            @Html.DropDownListFor(model => model.selectedSearchType, new SelectList(Model.SearchTypes, "Value", "Key"))
+            @Html.ValidationMessageFor(x => x.SearchTypes)
         </li>
         <li>
             <input type="submit" value="Search" />
@@ -36,6 +47,7 @@
 
 @if(Model.Result != null) {
     <p>Your search matched <strong>@Model.Result.Results.Count()</strong> properties from a total of <strong>@Model.Result.PropertiesFound</strong> in <strong>@Model.Duration</strong> seconds</p>
+    <p>You can view the results from Rightmove <a href="@Model.Result.SearchLink" target="_blank">here</a></p>
     <table cellpadding="3" border="1">
         <thead>
             <tr>

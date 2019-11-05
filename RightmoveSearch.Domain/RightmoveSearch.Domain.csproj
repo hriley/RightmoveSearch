@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CustomWebClient.cs" />
+    <Compile Include="Enums\SearchTypeEnum.cs" />
     <Compile Include="Models\SearchResultModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RightmoveService.cs" />

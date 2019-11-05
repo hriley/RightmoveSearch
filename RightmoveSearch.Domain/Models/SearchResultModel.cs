@@ -8,6 +8,9 @@ namespace RightmoveSearch.Domain
     public class SearchResultModel
     {
         public int PropertiesFound { get; set; }
+
+        public string SearchLink { get; set; }
+
         public IEnumerable<SearchResultModelItem> Results { get; set; }
     }
 
