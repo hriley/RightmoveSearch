@@ -36,3 +36,8 @@ select,
 textarea {
     max-width: 280px;
 }
+
+.errorMsg, .field-validation-error {
+    color:red;
+}
+

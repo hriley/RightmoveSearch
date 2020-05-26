@@ -18,6 +18,7 @@ namespace RightmoveSearch.Web.Controllers
             var regions = new Dictionary<string, string>();
             regions.Add("Tunbridge Wells", "REGION%5E1366");
             regions.Add("Fareham", "REGION%5E503");
+            regions.Add("Truro", "REGION%5E1365");
 
             var radius = new Dictionary<string, double>();
             radius.Add("This area only", 0);
@@ -35,15 +36,16 @@ namespace RightmoveSearch.Web.Controllers
             maxDays.Add("3", 3);
             maxDays.Add("7", 7);
             maxDays.Add("14", 14);
+            //maxDays.Add("Anytime", 0);
 
-            var searchTypes = new Dictionary<string, int>();
-            searchTypes.Add("Rightmove", 0);
-            searchTypes.Add("OnTheMarket", 1);
+            //var searchTypes = new Dictionary<string, int>();
+            //searchTypes.Add("Rightmove", 0);
+            //searchTypes.Add("OnTheMarket", 1);
 
             model.Regions = regions;
             model.Radius = radius;
             model.MaxDaysSinceAdded = maxDays;
-            model.SearchTypes = searchTypes;            
+            //model.SearchTypes = searchTypes;            
 
             return model;
         }
@@ -57,7 +59,7 @@ namespace RightmoveSearch.Web.Controllers
                 MaxPrice = 350000,
                 selectedMaxDays = 1,
                 selectedRadius = 20,
-                selectedSearchType = 0,
+                //selectedSearchType = 0,
                 Result = null
             };
 
@@ -74,24 +76,31 @@ namespace RightmoveSearch.Web.Controllers
                 Stopwatch sw = Stopwatch.StartNew();
                 if (ModelState.IsValid)
                 {
-                    var cacheKey = string.Format("{0}-{1}-{2}-{3}-{4}", model.selectedRegion, model.MinPrice, model.MaxPrice, model.selectedMaxDays, model.selectedRadius);
+
+                    //dirty hack to accommodate OnTheMarket
+                    //if (model.SearchType == Domain.Enums.SearchTypeEnum.OnTheMarket)
+                    //{
+                    //    model.selectedRegion = model.OTMRegion;
+                    //}
+
+                    var cacheKey = string.Format("{0}-{1}-{2}-{3}-{4}-{5}", model.selectedRegion, model.MinPrice, model.MaxPrice, model.selectedMaxDays, model.selectedRadius, model.selectedSearchType);
                     if (HttpRuntime.Cache.Get(cacheKey) == null)
                     {
-                        var service = new RightmoveService();
-                        model.Result = service.GetOTMProperties(model.selectedRegion, model.MinPrice, model.MaxPrice, model.selectedMaxDays, model.selectedRadius);
-                        HttpRuntime.Cache.Insert(cacheKey, model.Result, null, DateTime.Now.AddHours(1), Cache.NoSlidingExpiration);
+                            var service = new RightmoveService();
+                            model.Result = service.GetRightmoveProperties(model.selectedRegion, model.MinPrice, model.MaxPrice, model.selectedMaxDays, model.selectedRadius);
+                            HttpRuntime.Cache.Insert(cacheKey, model.Result, null, DateTime.Now.AddHours(1), Cache.NoSlidingExpiration);
                     }
                     else
                     {
                         model.Result = (SearchResultModel)HttpRuntime.Cache.Get(cacheKey);
                     }
-                }
+            }
                 
                 model.Duration = sw.Elapsed.Seconds;
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError("ErrorMsg", string.Format("Oops! An error occurred: {0}", ex.Message));
             }
 
             model = SetDDLists(model);

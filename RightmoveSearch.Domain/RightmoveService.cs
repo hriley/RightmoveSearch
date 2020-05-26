@@ -3,24 +3,72 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
+using System.Windows.Forms;
+using System.Configuration;
+using System.Globalization;
 
 namespace RightmoveSearch.Domain
 {
     public class RightmoveService
     {
-        private const int PageSize = 25;
+        public static string[] Keywords
+        {
+            get
+            {
+                var rawKeywords = Setting<string>("Keywords");
+                var keywords = !string.IsNullOrEmpty(rawKeywords) ? rawKeywords.Split(char.Parse(",")) : null;
+                return keywords;
+            }
+        }
+
+        private static T Setting<T>(string name)
+        {
+            string value = ConfigurationManager.AppSettings[name];
+
+            if (value == null)
+            {
+                throw new Exception(String.Format("Could not find setting '{0}',", name));
+            }
+
+            return (T)Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture);
+        }
+
+
+        private int PageSize(Enums.SearchTypeEnum searchType)
+        {
+            switch (searchType)
+            {
+                case Enums.SearchTypeEnum.OnTheMarket:
+                    return 24;
+                case Enums.SearchTypeEnum.RightMove:
+                    return 25;
+                default:
+                    return 25;
+            }
+        }
         private const string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36";
         //private const string ResultCountSelector = "searchHeader-resultCount";
         private const string PageCountSelector = "pagination-pageInfo";
         private const string LinkContainterSelector = "propertyCard-link";
         private const string LinkSelector = "/property-for-sale/property-";
-        readonly string[] _keywords = { "modernisation", "modernization", "refurbishment", "updating" };
-        private Enums.SearchTypeEnum searchType { get; set;}
+        private string daysSinceAdded(int value)
+        {
+            if(value > 0)
+            {
+                return value.ToString();
+            }
+            else
+            {
+                return string.Empty;
+            }
+        } 
+        //readonly string[] _keywords = { "modernisation", "modernization", "refurbishment", "updating" };
+        private Enums.SearchTypeEnum SearchType { get; set;}
 
         private string ResultCountSelector {
             get
             {
-                switch (searchType)
+                switch (SearchType)
                 {
                     case Enums.SearchTypeEnum.OnTheMarket:
                         return "results-count";
@@ -32,19 +80,19 @@ namespace RightmoveSearch.Domain
             }
         }
 
-
         public SearchResultModel GetOTMProperties(string location, int minPrice, int maxPrice, int maxDaysSinceAdded, int radius)
         {
-            var otmSearchUrl = string.Format("https://www.onthemarket.com/for-sale/houses/{4}/?max-price={1}&min-price={0}&new-home-flag=F&radius={3}&retirement=false&shared-ownership=false&view=grid", minPrice, maxPrice, maxDaysSinceAdded, radius, location);
-
+            SearchType = Enums.SearchTypeEnum.OnTheMarket;
+            var otmSearchUrl = string.Format("https://www.onthemarket.com/for-sale/2-bed-property/{4}/?max-bedrooms=&max-price={1}&min-price={0}&new-home-flag=F&prop-types=bungalows&prop-types=houses&retirement=false&shared-ownership=false&view=grid", minPrice, maxPrice, maxDaysSinceAdded, radius, location);
+            
             //Load html for the first page of the search results
-            var root = LoadHtml(0, otmSearchUrl, UserAgent);
+            var root = LoadHtmlAsynch(0, otmSearchUrl, UserAgent);
 
             //get the total number of search results
             var resultCount = GetSearchResultCount(root);
 
             //get a list of all the property links from the search results
-            var propertyLinks = GetPropertyLinks(root, otmSearchUrl);
+            var propertyLinks = GetPropertyLinks(root, otmSearchUrl, Enums.SearchTypeEnum.OnTheMarket);
 
             var matches = new List<SearchResultModelItem>();
             var searchReturn = new SearchResultModel
@@ -73,7 +121,7 @@ namespace RightmoveSearch.Domain
                 bool found = false;
                 if (keyFeaturesList != null)
                 {
-                    found = _keywords.Any(keyFeaturesList.InnerText.ToLower().Contains);
+                    found = Keywords.Any(keyFeaturesList.InnerText.ToLower().Contains);
                 }
 
                 //Now check the description for matches
@@ -82,7 +130,7 @@ namespace RightmoveSearch.Domain
                 //the description can be null in some rare cases
                 if (!found && description != null)
                 {
-                    found = _keywords.Any(description.InnerText.ToLower().Contains);
+                    found = Keywords.Any(description.InnerText.ToLower().Contains);
                     if (!found) return;
                 }
 
@@ -112,8 +160,9 @@ namespace RightmoveSearch.Domain
 
         public SearchResultModel GetRightmoveProperties(string region, int minPrice, int maxPrice, int maxDaysSinceAdded, int radius)
         {
-            var rightmoveSearchUrl = string.Format("http://www.rightmove.co.uk/property-for-sale/find.html?locationIdentifier={4}&minBedrooms=&minPrice={0}&maxPrice={1}&radius={3}&propertyTypes=detached%2Csemi-detached%2Cterraced%2Cbungalow&primaryDisplayPropertyType=houses&maxDaysSinceAdded={2}&includeSSTC=false&index=", minPrice, maxPrice, maxDaysSinceAdded, radius, region);
-            
+            var rightmoveSearchUrl = string.Format("http://www.rightmove.co.uk/property-for-sale/find.html?locationIdentifier={4}&minBedrooms=&minPrice={0}&maxPrice={1}&radius={3}&propertyTypes=detached%2Csemi-detached%2Cterraced%2Cbungalow&primaryDisplayPropertyType=houses&maxDaysSinceAdded={2}&includeSSTC=false&index=", minPrice, maxPrice, daysSinceAdded(maxDaysSinceAdded), radius, region);
+            SearchType = Enums.SearchTypeEnum.RightMove;
+
             //Load html for the first page of the search results
             var root = LoadHtml(0, rightmoveSearchUrl, UserAgent);
 
@@ -121,7 +170,7 @@ namespace RightmoveSearch.Domain
             var resultCount = GetSearchResultCount(root);
 
             //get a list of all the property links from the search results
-            var propertyLinks = GetPropertyLinks(root, rightmoveSearchUrl);
+            var propertyLinks = GetPropertyLinks(root, rightmoveSearchUrl, Enums.SearchTypeEnum.RightMove);
             
             var matches = new List<SearchResultModelItem>();
             var searchReturn = new SearchResultModel
@@ -151,7 +200,7 @@ namespace RightmoveSearch.Domain
                 bool found = false;
                 if (keyFeaturesList != null)
                 {
-                    found = _keywords.Any(keyFeaturesList.InnerText.ToLower().Contains);
+                    found = Keywords.Any(keyFeaturesList.InnerText.ToLower().Contains);
                 }
 
                 //Now check the description for matches
@@ -160,7 +209,7 @@ namespace RightmoveSearch.Domain
                 //the description can be null in some rare cases
                 if (!found && description != null)
                 {
-                    found = _keywords.Any(description.InnerText.ToLower().Contains);
+                    found = Keywords.Any(description.InnerText.ToLower().Contains);
                     if (!found) return;
                 }
 
@@ -189,18 +238,18 @@ namespace RightmoveSearch.Domain
         }
 
 
-        private IEnumerable<string> GetPropertyLinks(HtmlNode rootNode, string rightmoveUrl)
+        private IEnumerable<string> GetPropertyLinks(HtmlNode rootNode, string url, Enums.SearchTypeEnum searchType)
         {
             //get the number of pages
             int resultCount = GetSearchResultCount(rootNode);
-            var pageCount = (int)Math.Ceiling((double)resultCount / PageSize);
+            var pageCount = (int)Math.Ceiling((double)resultCount / PageSize(searchType));
 
             //create a list of all property links
             var propertyLinks = new List<string>();
             for (var i = 0; i <= pageCount - 1; i++)
             {
-                var pageIndex = i * PageSize;
-                var html = rootNode ?? LoadHtml(pageIndex, rightmoveUrl, UserAgent);
+                var pageIndex = i * PageSize(searchType);
+                var html = rootNode ?? LoadHtml(pageIndex, url, UserAgent);
                 var results = html.Descendants("a").Where(x => x.GetAttributeValue("class", "").Contains(LinkContainterSelector) && x.GetAttributeValue("href", "").Contains(LinkSelector)).Select(y => y.GetAttributeValue("href", "")).Distinct();
                 var enumerable = results as IList<string> ?? results.ToList();
                 //int count = enumerable.Count();
@@ -227,15 +276,15 @@ namespace RightmoveSearch.Domain
         {
             var fullUrl = string.Format("{0}{1}", url, pageIndex);
             //var html = new HtmlDocument();
-            try
-            {
+            //try
+            //{
                 var html = new CustomWebClient().GetPage(fullUrl, userAgent);
                 return html.DocumentNode;
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }            
+            //}
+            //catch (Exception ex)
+            //{
+            //    return null;
+            //}            
         }
 
         private HtmlNode LoadHtml(string rightmoveUrl, string userAgent)
@@ -246,6 +295,47 @@ namespace RightmoveSearch.Domain
 
 
             return html.DocumentNode;
+        }
+
+        private HtmlNode LoadHtmlAsynch(int pageIndex, string url, string userAgent)
+        {
+            var fullUrl = string.Format("{0}{1}", url, pageIndex);
+            //var html = new HtmlDocument();
+            try
+            {
+                //var html = new CustomWebClient().GetPage(fullUrl, userAgent);
+                //return html.DocumentNode;
+
+
+                var web1 = new HtmlWeb();
+                var doc1 = web1.LoadFromBrowser(url, o =>
+                {
+                    var webBrowser = (WebBrowser)o;
+
+                    var spans = webBrowser.Document.GetElementsByTagName("span");
+                    foreach (HtmlElement span in spans)
+                    {
+                        if (span.GetAttribute("className") == "results-count")
+                        {
+                            // WAIT until the dynamic text is set
+                            return !string.IsNullOrEmpty(span.InnerText);
+                        }
+                    }
+                    return false;
+                    
+                });
+
+                return doc1.DocumentNode;
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+
+            //string url = "http://html-agility-pack/from-browser";
+
+            
         }
     }
 }

@@ -7,6 +7,7 @@ using System.Web;
 using RightmoveSearch.Domain;
 using RightmoveSearch.Domain.Enums;
 
+
 namespace RightmoveSearch.Web.Models
 {
     public class HomeViewModel
@@ -15,6 +16,23 @@ namespace RightmoveSearch.Web.Models
 
         [Required]
         public string selectedRegion { get; set; }
+
+        //Filthy code
+        public string OTMRegion
+        {
+            get
+            {
+                switch (selectedRegion)
+                {
+                    case "REGION%5E1366":
+                        return "tunbridge-wells";
+                    case "REGION%5E503":
+                        return "fareham";
+                    default:
+                        return "";
+                }
+            }
+        }
 
         [Required]
         public int MinPrice { get; set; }
@@ -35,13 +53,26 @@ namespace RightmoveSearch.Web.Models
         [DefaultValue(null)]
         public SearchResultModel Result { get; set; }
 
-        //public SearchTypeEnum SearchType { get; set;}
+        public SearchTypeEnum SearchType {
+            get
+            {
+                return (SearchTypeEnum)((int)selectedSearchType);
+            }
+        }
 
         public Dictionary<string, int> SearchTypes { get; set; }
 
         public SearchTypeEnum selectedSearchType { get; set; }
 
         public int Duration { get; set; }
+
+        public string[] Keywords
+        {
+            get
+            {
+                return RightmoveService.Keywords;
+            }
+        }
 
         public bool IsError { get; set; }
 

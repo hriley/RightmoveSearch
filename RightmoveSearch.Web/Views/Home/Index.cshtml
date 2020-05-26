@@ -4,11 +4,32 @@
     ViewBag.Title = "Home";
 }
 
-<p>Search for properties in need of modernisation:</p>
+@if (Model.Keywords != null)
+{
+    <span><strong>Current keywords are:</strong></span>
+    var count = 0;
+    foreach (string keyword in Model.Keywords)
+    {
+        if (count < Model.Keywords.Length - 1)
+        {
+            <span>@keyword; </span>
+        }
+        else
+        {
+            <span>@keyword</span>
+        }
+        count++;
+    }
+}
+<br />
+<br />
+
 @using (Html.BeginForm())
 {
+    <p>Search for properties in need of modernisation:</p>
     <ul id="search-form">
         <li>@Html.ValidationSummary(true, "", new {  })</li>
+        <li>@Html.ValidationMessage("ErrorMsg")</li>
         <li>
             @Html.LabelFor(x => x.Regions, "Region")
             @Html.DropDownListFor(model => model.selectedRegion, new SelectList(Model.Regions, "Value", "key"))
@@ -34,20 +55,23 @@
             @Html.DropDownListFor(model => model.selectedRadius, new SelectList(Model.Radius, "Value", "Key"))
             @Html.ValidationMessageFor(x => x.Radius)
         </li>
-        <li>
+        @*<li>
             @Html.LabelFor(x => x.SearchTypes, "Search Type")
             @Html.DropDownListFor(model => model.selectedSearchType, new SelectList(Model.SearchTypes, "Value", "Key"))
             @Html.ValidationMessageFor(x => x.SearchTypes)
-        </li>
+        </li>*@
         <li>
             <input type="submit" value="Search" />
         </li>
     </ul>
 }
 
-@if(Model.Result != null) {
+@if (Model.Result != null)
+{
+    <br />
+    <br />
     <p>Your search matched <strong>@Model.Result.Results.Count()</strong> properties from a total of <strong>@Model.Result.PropertiesFound</strong> in <strong>@Model.Duration</strong> seconds</p>
-    <p>You can view the results from Rightmove <a href="@Model.Result.SearchLink" target="_blank">here</a></p>
+    <p>You can view all the properties you just searched <a href="@Model.Result.SearchLink" target="_blank">here</a></p>
     <table cellpadding="3" border="1">
         <thead>
             <tr>
