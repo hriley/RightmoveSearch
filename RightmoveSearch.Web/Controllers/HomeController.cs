@@ -18,7 +18,11 @@ namespace RightmoveSearch.Web.Controllers
             var regions = new Dictionary<string, string>();
             regions.Add("Tunbridge Wells", "REGION%5E1366");
             regions.Add("Fareham", "REGION%5E503");
+            regions.Add("Southampton", "REGION%5E1231");
+            regions.Add("Portsmouth", "REGION%5E1089");
             regions.Add("Truro", "REGION%5E1365");
+            regions.Add("Bristol", "REGION%5E219");
+            regions.Add("Brighton", "REGION%5E93554");
 
             var radius = new Dictionary<string, double>();
             radius.Add("This area only", 0);
@@ -55,10 +59,10 @@ namespace RightmoveSearch.Web.Controllers
             var vm = new HomeViewModel
             {
                 selectedRegion = "REGION%5E1366",
-                MinPrice = 200000,
-                MaxPrice = 350000,
+                MinPrice = 150000,
+                MaxPrice = 300000,
                 selectedMaxDays = 1,
-                selectedRadius = 20,
+                selectedRadius = 10,
                 //selectedSearchType = 0,
                 Result = null
             };

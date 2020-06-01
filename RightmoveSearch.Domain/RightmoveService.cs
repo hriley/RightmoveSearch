@@ -21,6 +21,16 @@ namespace RightmoveSearch.Domain
             }
         }
 
+        public static string[] ExcludedKeywords
+        {
+            get
+            {
+                var rawKeywords = Setting<string>("ExcludedKeywords");
+                var keywords = !string.IsNullOrEmpty(rawKeywords) ? rawKeywords.Split(char.Parse(",")) : null;
+                return keywords;
+            }
+        }
+
         private static T Setting<T>(string name)
         {
             string value = ConfigurationManager.AppSettings[name];
@@ -186,6 +196,12 @@ namespace RightmoveSearch.Domain
                 var propertyUrl = string.Format("http://www.rightmove.co.uk{0}", link);
                 var propertyPage = LoadHtml(propertyUrl, UserAgent);
                 var propertyAddress = propertyPage.Descendants("address").FirstOrDefault(x => x.GetAttributeValue("class", "") == "pad-0 fs-16 grid-25").InnerText;
+                
+                ////check if it's on the Isle of Whight
+                //if (propertyAddress.IndexOf()
+                //{
+                //    return;
+                //}
 
                 //check if it's a duplicate
                 if (matches.Select(m => m.Address).Contains(propertyAddress))
