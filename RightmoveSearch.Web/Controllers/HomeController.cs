@@ -23,7 +23,9 @@ namespace RightmoveSearch.Web.Controllers
             regions.Add("Truro", "REGION%5E1365");
             regions.Add("Bristol", "REGION%5E219");
             regions.Add("Brighton", "REGION%5E93554");
-
+            regions.Add("Bath", "REGION%5E116");
+            regions.Add("Frome", "REGION%5E536");
+            
             var radius = new Dictionary<string, double>();
             radius.Add("This area only", 0);
             radius.Add("1 / 4 mile", 0.25);

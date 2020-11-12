@@ -192,10 +192,11 @@ namespace RightmoveSearch.Domain
 
             //load each link and check for our key words
             Parallel.ForEach(propertyLinks, link => {
+                var i = 0;
                 SearchResultModelItem searchResult = new SearchResultModelItem();
                 var propertyUrl = string.Format("http://www.rightmove.co.uk{0}", link);
                 var propertyPage = LoadHtml(propertyUrl, UserAgent);
-                var propertyAddress = propertyPage.Descendants("address").FirstOrDefault(x => x.GetAttributeValue("class", "") == "pad-0 fs-16 grid-25").InnerText;
+                var propertyAddress = propertyPage.Descendants("address").Count() > 0 ? propertyPage.Descendants("address").FirstOrDefault(x => x.GetAttributeValue("class", "") == "pad-0 fs-16 grid-25").InnerText : string.Format("Empty address {0}", i);
                 
                 ////check if it's on the Isle of Whight
                 //if (propertyAddress.IndexOf()
@@ -204,7 +205,7 @@ namespace RightmoveSearch.Domain
                 //}
 
                 //check if it's a duplicate
-                if (matches.Select(m => m.Address).Contains(propertyAddress))
+                if (!string.IsNullOrWhiteSpace(propertyAddress) && matches.Select(m => m.Address).Contains(propertyAddress))
                 {
                     return;
                 }
@@ -246,6 +247,7 @@ namespace RightmoveSearch.Domain
                     searchResult.Address = propertyAddress;
                     matches.Add(searchResult);
                 }
+                i++;
             });
 
             searchReturn.Results = matches.OrderByDescending(x => x.DateAdded);
